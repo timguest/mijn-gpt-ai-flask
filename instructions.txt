@@ -1,0 +1,10 @@
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+API:
+flask --app app/api/routes run --debug
+
+Scraper:
+scraper(")
+python app/scraper/scraper.py
