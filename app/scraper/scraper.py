@@ -38,13 +38,15 @@ class Scraper:
 
     def get_domain(self, url: str) -> str:
         """Extracts the second-level domain from the URL."""
-        return urlparse(url).netloc.split(".")[0]
+        return urlparse(url).netloc.split(".")[1]
 
     def get_all_page_links(self, url: str) -> Set[str]:
         """Returns all unique internal links found on a single page `url`."""
         if self.visited is None:
             self.visited = set()
 
+        if not url:
+            return self.visited
         url = (
             url.lower()
         )  # Should consider removing .lower() or ensure URL case normalization is handled correctly
@@ -226,6 +228,6 @@ class Scraper:
 
 
 # Example
-# scraper = Scraper()
-# scraper.url = "https://www.scrapethissite.com/"
-# scraper.scrape()
+scraper = Scraper()
+scraper.url = "https://www.scrapethissite.com/"
+scraper.scrape()
