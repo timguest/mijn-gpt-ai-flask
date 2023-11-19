@@ -1,0 +1,3 @@
+dispatch:
+  - url: "api.mijngpt.ai/*"
+    service: api-service

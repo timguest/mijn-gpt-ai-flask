@@ -1,0 +1,29 @@
+service: api-service  # Name your service appropriately
+runtime: python311
+instance_class: F2 # or another supported runtime
+entrypoint: gunicorn -b :$PORT app.api.routes:app   # Adjust 'main:app' if your Flask app is defined differently
+
+# If you are using an instance with automatic scaling
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  min_instances: 0
+  max_instances: 3
+# If you are using an instance with manual scaling
+#manual_scaling:
+#  instances: 5  # Define the number of instances you want to run
+
+# Environment variables that your application uses
+env_variables:
+  FLASK_ENV: 'production'
+  SECRET_KEY: 'a-very-secret-key'
+  OPENAI_API_KEY: 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
+
+# If you're using Google Cloud services, you might need to specify the service account
+#service_account: 'your-service-account@your-project-id.iam.gserviceaccount.com'
+
+# If you need to handle static files (this is optional)
+#handlers:
+#- url: /static
+#  static_dir: static/
+
+

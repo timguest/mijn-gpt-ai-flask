@@ -228,6 +228,6 @@ class Scraper:
 
 
 # Example
-scraper = Scraper()
-scraper.url = "https://www.scrapethissite.com/"
-scraper.scrape()
+# scraper = Scraper()
+# scraper.url = "https://www.scrapethissite.com/"
+# scraper.scrape()
