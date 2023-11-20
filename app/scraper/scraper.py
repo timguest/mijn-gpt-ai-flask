@@ -94,6 +94,7 @@ class Scraper:
 
         domain_name = self.create_file_name('txt')
         upload_blob('bucket_storing_data_clients', self.path, domain_name)
+        return routes
 
     def create_text_file(self, internal_links):
         print('Starting to create Word document and text file')

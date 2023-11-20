@@ -14,7 +14,7 @@ def receive_message():
     company = message_data["company"]
     # Specify your bucket name and blob name
     bucket_name = 'bucket_storing_data_clients'
-    source_blob_name = f'{company}/data..txt'
+    source_blob_name = f'{company}/data.txt'
     destination_file_name = f'{company}_data.txt'
 
     # Get the local file path after downloading
@@ -37,10 +37,10 @@ def receive_url():
     url = message_data["url"]
 
     scraper = Scraper()
-    scraper.scrape(url)
+    links = scraper.scrape(url)
 
     # "message" value is displayed as the AI's response in the frontend
-    return jsonify({"status": "success", "message": f"Message received: {url}"}), 200
+    return jsonify({"status": "success", "message": f"Message received: {url}", "links": {links}}), 200
 
 
 # Configure CORS to allow both production and local development domains
