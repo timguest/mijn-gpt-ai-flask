@@ -14,20 +14,14 @@ import os
 
 load_dotenv()
 
-# if not os.getenv('GOOGLE_APPLICATION_CREDENTIALS'):
-#     # Set the environment variable for local development
-#     local_key_path = '/Users/tim.guest/PycharmProjects/mijn-gpt-ai-flask/mijngpt-ai-d56736999e85.json'
-#     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = local_key_path
-
-import os
-script_dir = os.path.dirname(__file__)  # Path to the directory of the current script
-data_path = os.path.join(script_dir, "..", "scraper", "scraped_data", "jandebelastingman", "data.txt")
+if not os.getenv('GOOGLE_APPLICATION_CREDENTIALS'):
+    # Set the environment variable for local development
+    local_key_path = '/Users/tim.guest/PycharmProjects/mijn-gpt-ai-flask/mijngpt-ai-d56736999e85.json'
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = local_key_path
 
 client = openai.OpenAI(
     api_key=getenv("OPENAI_API_KEY")
 )
-
-
 
 
 def generate_response(question: str, local_file_path) -> str:
@@ -40,18 +34,12 @@ def generate_response(question: str, local_file_path) -> str:
 
     # Add the file to the assistant
     assistant = client.beta.assistants.create(
-        instructions="You are an intelligent assistant dedicated to offering clear, concise support and guidance. Your "
-                     "role is to provide accurate"
-                     "answers to questions, relying solely on information from the provided PDF "
-                     "documentation. You are programmed to communicate in an easy-to-understand, non-technical "
-                     "language, ensuring accessibility for all users, regardless of their familiarity with "
-                     "dishwashers. Your tone is friendly, approachable, and professional, aiding in delivering "
-                     "instructions and explanations that are both informative and easy to comprehend. Importantly, "
-                     "you are programmed to not fabricate responses. If a query falls outside the scope of the "
-                     "provided documentation, you will politely inform the user that the information is not "
-                     "available, rather than offering speculative or made-up answers. This approach ensures that "
-                     "users receive reliable and accurate information, enhancing their experience and trust. Keep the answers"
-                     "relevant and short.",
+        instructions="You are an advanced intelligent assistant designed to provide precise and succinct support to "
+                     "users. Operating within a website widget, your primary role is to assist customers by "
+                     "delivering answers based on a specific text file provided to you. It's imperative that your "
+                     "responses are accurate, strictly derived from the contents of the provided file, "
+                     "and contextually appropriate. Ensure your answers are relevant and concise, avoiding any "
+                     "conjecture or deviation from the source material",
         model="gpt-4-1106-preview",
         tools=[{"type": "retrieval"}],
         file_ids=[file.id]
@@ -104,3 +92,13 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
     # Return the path to the downloaded file
     return writable_destination
 
+
+def upload_blob(bucket_name, source_file_name, destination_blob_name):
+    """Uploads a file to the specified bucket."""
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
+
+    blob.upload_from_filename(source_file_name)
+
+    print(f"File {source_file_name} uploaded to {destination_blob_name}.")

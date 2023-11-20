@@ -11,10 +11,11 @@ def receive_message():
     print(request)
     message_data = request.json
     message_text = message_data["text"]
+    company = message_data["company"]
     # Specify your bucket name and blob name
     bucket_name = 'bucket_storing_data_clients'
-    source_blob_name = 'dehoogewaerder_data.txt'
-    destination_file_name = 'dehoogewaerder_data.txt'
+    source_blob_name = f'{company}_data.txt'
+    destination_file_name = f'{company}_data.txt'
 
     # Get the local file path after downloading
     local_file_path = download_blob(bucket_name, source_blob_name, destination_file_name)
@@ -24,7 +25,7 @@ def receive_message():
 
     # "message" value is displayed as the AI's response in the frontend
     return (
-        jsonify({"status": "success", "message": f"dit is het antwoord {answer}"}),
+        jsonify({"status": "success", "message": f"{answer}"}),
         200,
     )
 
