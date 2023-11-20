@@ -1,5 +1,7 @@
 import requests
 from urllib.parse import urljoin, urlparse
+
+import tldextract as tldextract
 from bs4 import BeautifulSoup
 from typing import Set, Optional, List, Any
 from pathlib import Path
@@ -35,7 +37,8 @@ class Scraper:
 
     def get_domain(self, url: str) -> str:
         """Extracts the second-level domain from the URL."""
-        return urlparse(url).netloc.split('.')[0]
+        extracted = tldextract.extract(url)
+        return extracted.domain
 
     def get_all_page_links(self, url) -> list[Any]:
         """Returns all unique internal links found on a single page `url`."""
@@ -124,7 +127,10 @@ class Scraper:
 
 def get_page_content(url):
     try:
-        response = requests.get(url)
+        HEADERS = {
+            'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148'}
+
+        response = requests.get(url, headers=HEADERS)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
             texts = soup.stripped_strings

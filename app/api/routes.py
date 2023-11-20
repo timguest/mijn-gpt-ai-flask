@@ -40,7 +40,7 @@ def receive_url():
     links = scraper.scrape(url)
 
     # "message" value is displayed as the AI's response in the frontend
-    return jsonify({"status": "success", "message": f"Message received: {url}", "links": {links}}), 200
+    return jsonify({"status": "success", "message": f"Message received: {url}"}), 200
 
 
 # Configure CORS to allow both production and local development domains
