@@ -14,14 +14,11 @@ import os
 
 load_dotenv()
 
-# if not os.getenv('GOOGLE_APPLICATION_CREDENTIALS'):
-#     # Set the environment variable for local development
-#     local_key_path = '/Users/tim.guest/PycharmProjects/mijn-gpt-ai-flask/mijngpt-ai-d56736999e85.json'
-#     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = local_key_path
+if not os.getenv('GOOGLE_APPLICATION_CREDENTIALS'):
+    # Set the environment variable for local development
+    local_key_path = '/Users/tim.guest/PycharmProjects/mijn-gpt-ai-flask/mijngpt-ai-d56736999e85.json'
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = local_key_path
 
-import os
-script_dir = os.path.dirname(__file__)  # Path to the directory of the current script
-data_path = os.path.join(script_dir, "..", "scraper", "scraped_data", "jandebelastingman", "data.txt")
 
 client = openai.OpenAI(
     api_key=getenv("OPENAI_API_KEY")
