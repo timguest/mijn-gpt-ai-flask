@@ -3,6 +3,7 @@ from flask_cors import CORS
 from app.scraper.scraper import Scraper
 from app.core.chatapi import generate_response, download_blob
 
+
 def receive_message():
     # print(request)
     # message_data = request.json
@@ -27,10 +28,8 @@ def receive_message():
     # )
 
 
-
 def receive_url(url):
     print("start_scraping")
-
 
     scraper = Scraper()
     scraper.scrape(url)
@@ -39,8 +38,5 @@ def receive_url(url):
     return jsonify({"status": "success", "message": f"Message received: {url}"}), 200
 
 
-
-
-
-# receive_url('https://dehoogewaerder.nl/')
-receive_message()
+receive_url('https://dehoogewaerder.nl/')
+# receive_message()
