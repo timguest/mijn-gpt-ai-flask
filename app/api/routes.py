@@ -38,5 +38,5 @@ def receive_url(url):
     return jsonify({"status": "success", "message": f"Message received: {url}"}), 200
 
 
-receive_url('https://dehoogewaerder.nl/')
+receive_url('https://marskramervelzeboer.nl/')
 # receive_message()

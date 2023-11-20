@@ -122,7 +122,10 @@ class Scraper:
 
 def get_page_content(url):
     try:
-        response = requests.get(url)
+        HEADERS = {
+            'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148'}
+
+        response = requests.get(url, headers=HEADERS)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
             texts = soup.stripped_strings
