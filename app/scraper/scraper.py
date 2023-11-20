@@ -38,58 +38,41 @@ class Scraper:
 
     def get_domain(self, url: str) -> str:
         """Extracts the second-level domain from the URL."""
-        return urlparse(url).netloc.split(".")[1]
+        return urlparse(url).netloc.split('.')[0]
 
-    def get_all_page_links(self, url: str) -> Set[str]:
+    def get_all_page_links(self, url) -> Set[str]:
         """Returns all unique internal links found on a single page `url`."""
         if self.visited is None:
             self.visited = set()
 
-        if not url:
+        normalized_url = url.lower()  # Should consider removing .lower() or ensure URL case normalization is handled correctly
+        if normalized_url in self.visited:
             return self.visited
-        url = (
-            url.lower()
-        )  # Should consider removing .lower() or ensure URL case normalization is handled correctly
+        else:
+            self.visited.add(normalized_url)
 
-        if url in self.visited:
-            return self.visited
-
-        self.visited.add(url)
-
-        if "blog" in urlparse(url).path:
-            print("Skipping blog:", url)
+        if 'blog' in urlparse(normalized_url).path:
+            print('Skipping blog:', normalized_url)
             return self.visited
 
         try:
             response = requests.get(url, timeout=5)
-
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                links = [a.get('href') for a in soup.find_all('a', href=True)]
+                for link in links:
+                    joined_url = urljoin(url, link)
+                    normalized_joined_url = joined_url.lower()  # Again, consider case sensitivity
+                    if 'blog' not in urlparse(normalized_joined_url).path:
+                        if urlparse(normalized_joined_url).netloc == urlparse(url).netloc:  # This check is added
+                            if self.is_valid_url(normalized_joined_url):  # Make sure this method is defined and correct
+                                if normalized_joined_url not in self.visited:
+                                    self.visited.update(self.get_all_page_links(
+                                        normalized_joined_url))  # Recursively update the visited set
         except requests.RequestException as e:
-            print(f"Error accessing {url}: {e}")
+            print(f'Error accessing {url}: {e}')
+        finally:
             return self.visited
-
-        if response.status_code != 200:
-            return self.visited
-
-        soup = BeautifulSoup(response.text, "html.parser")
-        links = [a.get("href") for a in soup.find_all("a", href=True)]
-
-        for link in links:
-            old_url = url
-            url = urljoin(url, link).lower()
-
-            if (
-                "blog" in urlparse(url).path
-                or urlparse(url).netloc != urlparse(old_url).netloc
-                or not self.is_valid_url(url)
-                or url in self.visited
-            ):
-                continue
-
-            self.visited.update(
-                self.get_all_page_links(url)
-            )  # Recursively update the visited set
-
-        return self.visited
 
     def create_storage_dir(self) -> Path:
         """Creates a directory within scraped_data/ named after the website's second-level domain."""
@@ -144,14 +127,14 @@ class Scraper:
         """
         if url:
             self.url = url
-
+        print(self.url)
         self.storage_dir = self.create_storage_dir()
         routes = self.get_all_page_links(url)
         print(routes)
 
         self.create_word_document_and_text_file(routes)
 
-    def write_to_file(self, file_name: str, content: str) -> None:
+    def write_to_file(self, file_name: str, content: str):
         file_name = Path(file_name)
         if file_name.suffix == ".json":
             json.dump(content, f)
@@ -160,12 +143,12 @@ class Scraper:
         with open(file_name, "a", encoding="utf-8") as f:
             f.write(str(content))
 
-    def create_word_document_and_text_file(self, internal_links: set[str]) -> None:
-        print("Starting to create Word document and text file")
+    def create_word_document_and_text_file(self, internal_links):
+        print('Starting to create Word document and text file')
 
         # Create the file paths
-        text_file_path = self.create_file_name("txt")
-        word_document_path = self.create_file_name("docx")
+        text_file_path = self.create_file_name('txt')
+        word_document_path = self.create_file_name('docx')
         print(f"Text file will be saved as: {text_file_path}")
         print(f"Word document will be saved as: {word_document_path}")
 
@@ -173,58 +156,95 @@ class Scraper:
         all_content = []  # List to keep all contents for the text file
 
         # Scrape the main URL
-        content = self.get_page_content(self.url)
+        content = get_page_content(self.url)
         if content:
-            content = self.sanitize_content(content)  # Sanitize content
+            content = sanitize_content(content)  # Sanitize content
             document.add_heading(self.url, level=1)
             document.add_paragraph(content)
-            all_content.append(
-                self.url + "\n" + content
-            )  # Add main URL content to the list
+            all_content.append(self.url + '\n' + content)  # Add main URL content to the list
 
         # Scrape the internal URLs
         for url in internal_links:
-            if not (content := self.get_page_content(url)):
-                continue
+            content = get_page_content(url)
+            if content:
+                content = sanitize_content(content)  # Sanitize content
 
-            content = self.sanitize_content(content)  # Sanitize content
+                # Word Document
+                document.add_page_break()
+                title = url.replace(self.url, '').strip('/')
+                document.add_heading(title, level=1)
+                document.add_paragraph(content)
 
-            # Word Document
-            document.add_page_break()
-            title = url.replace(self.url, "").strip("/")
-            document.add_heading(title, level=1)
-            document.add_paragraph(content)
-
-            # Text File
-            all_content.append(
-                title + "\n" + content
-            )  # Add internal URL content to the list
-            time.sleep(1)  # Sleep to be gentle on the server
+                # Text File
+                all_content.append(title + '\n' + content)  # Add internal URL content to the list
+                time.sleep(1)  # Sleep to be gentle on the server
 
         # Save the Word document
         document.save(word_document_path)
 
         # Write all contents to the text file, separated by double newlines
-        with open(text_file_path, "w", encoding="utf-8") as text_file:
-            text_file.write("\n\n".join(all_content))
+        with open(text_file_path, 'w', encoding='utf-8') as text_file:
+            text_file.write('\n\n'.join(all_content))
 
-    def get_page_content(self, url: str) -> Optional[str]:
-        try:
-            response = requests.get(url)
 
-        except requests.RequestException:
-            return
+# Example
+# scraper = Scraper()
+# scraper.url = "https://www.scrapethissite.com/"
+# scraper.scrape()
 
-        if response.status_code != 200:
-            return
+def get_internal_links(url, visited=None):
+    if visited is None:
+        visited = set()
 
-        soup = BeautifulSoup(response.text, "html.parser")
-        texts = soup.stripped_strings
-        return " ".join(texts)
+    normalized_url = url.lower()
+    if normalized_url in visited:
+        return visited
+    else:
+        visited.add(normalized_url)
 
-    def sanitize_content(self, text: str) -> str:
-        # Replace double newlines with a single newline
-        return text.replace("\n\n", "\n")
+    # Check if 'blog' is in the path of the URL
+    if 'blog' in urlparse(normalized_url).path:
+        print('Skipping blog:', normalized_url)
+        return visited
+
+    try:
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            links = [a.get('href') for a in soup.find_all('a', href=True)]
+            for link in links:
+                joined_url = urljoin(url, link)
+                # Normalize the joined URL for consistency
+                normalized_joined_url = joined_url.lower()
+                if 'blog' not in urlparse(normalized_joined_url).path:
+                    if urlparse(normalized_joined_url).netloc == urlparse(url).netloc:
+                        # Recursively get internal links only if not already visited
+                        if normalized_joined_url not in visited:
+                            get_internal_links(normalized_joined_url, visited)
+    except requests.RequestException as e:
+        print(f'Error accessing {url}: {e}')
+    finally:
+        return visited
+
+
+
+def get_page_content(url):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            texts = soup.stripped_strings
+            content = ' '.join(texts)
+            return content
+        else:
+            return None
+    except requests.RequestException:
+        return None
+
+
+def sanitize_content(text):
+    # Replace double newlines with a single newline
+    return text.replace('\n\n', '\n')
 
 
 # Example

@@ -16,7 +16,7 @@ automatic_scaling:
 env_variables:
   FLASK_ENV: 'production'
   SECRET_KEY: 'a-very-secret-key'
-  OPENAI_API_KEY: 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
+  OPENAI_API_KEY: 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
 
 # If you're using Google Cloud services, you might need to specify the service account
 #service_account: 'your-service-account@your-project-id.iam.gserviceaccount.com'
