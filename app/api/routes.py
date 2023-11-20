@@ -14,7 +14,7 @@ def receive_message():
     company = message_data["company"]
     # Specify your bucket name and blob name
     bucket_name = 'bucket_storing_data_clients'
-    source_blob_name = f'{company}_data.txt'
+    source_blob_name = f'{company}/data..txt'
     destination_file_name = f'{company}_data.txt'
 
     # Get the local file path after downloading

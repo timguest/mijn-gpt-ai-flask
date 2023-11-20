@@ -85,13 +85,14 @@ class Scraper:
         """
         if url:
             self.url = url
+        print(self.url)
         self.storage_dir = self.create_storage_dir()
         routes = self.get_all_page_links(url)
         print(routes)
 
         self.create_text_file(routes)
 
-        domain_name = self.create_file_name('.txt')
+        domain_name = self.create_file_name('txt')
         upload_blob('bucket_storing_data_clients', self.path, domain_name)
 
     def create_text_file(self, internal_links):
