@@ -13,8 +13,8 @@ def receive_message():
     message_text = message_data["text"]
     # Specify your bucket name and blob name
     bucket_name = 'bucket_storing_data_clients'
-    source_blob_name = 'jandebelastingman_data.txt'
-    destination_file_name = 'jandebelastingman_data.txt'
+    source_blob_name = 'dehoogewaerder_data.txt'
+    destination_file_name = 'dehoogewaerder_data.txt'
 
     # Get the local file path after downloading
     local_file_path = download_blob(bucket_name, source_blob_name, destination_file_name)
