@@ -43,7 +43,10 @@ class Scraper:
     def get_all_page_links(self, url) -> list[Any]:
         """Returns all unique internal links found on a single page `url`."""
         try:
-            response = requests.get(url, timeout=5)
+            HEADERS = {
+                'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148'}
+
+            response = requests.get(url, timeout=5, headers=HEADERS)
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
                 links = [a.get('href') for a in soup.find_all('a', href=True)]
@@ -97,7 +100,7 @@ class Scraper:
 
         domain_name = self.create_file_name('txt')
         upload_blob('bucket_storing_data_clients', self.path, domain_name)
-        return routes
+        return domain_name.split('/')[0]
 
     def create_text_file(self, internal_links):
         print('Starting to create Word document and text file')

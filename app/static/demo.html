@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Chat Application</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    /* General styling */
+    body {
+        background-color: #f4f7f6;
+        font-family: 'Arial', sans-serif;
+    }
+
+    /* Chat window styling */
+    .chat-window {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        height: 300px;
+        overflow-y: auto;
+        background-color: white;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    /* Chat message styling */
+    .chat-message {
+        display: block;
+        width: 80%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 20px;
+        line-height: 1.4;
+        word-wrap: break-word;
+    }
+
+    .user-message {
+        background-color: #007bff;
+        color: white;
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    .response-message {
+        background-color: #6c757d;
+        color: white;
+        margin-left: 0;
+        margin-right: auto;
+    }
+
+    /* Form input and button styling */
+    #chatInput {
+        border-radius: 20px 0 0 20px;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+
+    .btn-secondary {
+        border-radius: 0 20px 20px 0;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+
+    .input-group-append {
+        margin-left: -1px; /* Align button with input */
+    }
+
+    /* Scrollbar styling for chat window */
+    ::-webkit-scrollbar {
+        width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #888;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
+
+</head>
+<body>
+    <div class="container mt-5">
+        <!-- URL Input Section -->
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <h2 class="mb-4 text-center">Enter URL</h2>
+                <form id="urlForm"> <!-- Add this id -->
+                    <div class="form-group">
+                        <input type="url" class="form-control" id="urlInput" placeholder="Enter URL">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- Chat Window Section -->
+        <div class="row mt-5">
+            <div class="col-md-8 offset-md-2">
+                <h3 class="text-center mb-3">Chat Window</h3>
+                <div class="chat-window" id="chatWindow">
+                    <!-- Chat messages will appear here -->
+                </div>
+                <form id="chatForm">
+                    <div class="input-group mt-3">
+                        <input type="text" class="form-control" id="chatInput" placeholder="Type a message...">
+                        <div class="input-group-append">
+                            <button class="btn btn-secondary" type="submit">Send</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script>
+    var currentDomainInfo = null; // Global variable to store domain info
+
+// Function to add messages to the chat window
+function addMessageToChat(message, className) {
+    var messageDiv = document.createElement('div');
+    messageDiv.classList.add('chat-message', className);
+    messageDiv.textContent = message;
+    document.getElementById('chatWindow').appendChild(messageDiv);
+    // Scroll to the bottom of the chat window
+    var chatWindow = document.getElementById('chatWindow');
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+// Handling URL form submission
+document.getElementById('urlForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    var urlInput = document.getElementById('urlInput');
+    if (urlInput.value.trim() !== '') {
+        // Sending AJAX request to Flask backend
+        fetch('/url', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ url: urlInput.value })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                currentDomainInfo = data.domainInfo; // Store the domain info
+                // Display initial message in chat window
+                addMessageToChat('Thank you for the information, what would you like to know about ' + data.message, 'response-message');
+            } else {
+                // Handle error case
+                addMessageToChat('Error processing URL', 'response-message');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            addMessageToChat('Error sending request', 'response-message');
+        });
+
+        urlInput.value = ''; // Clear URL input field
+    }
+});
+
+// Handling chat message submission
+document.getElementById('chatForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    var chatInput = document.getElementById('chatInput');
+    if (chatInput.value.trim() !== '') {
+        // Display user's message in chat window
+        addMessageToChat(chatInput.value, 'user-message');
+
+        // Sending AJAX request to Flask backend
+        fetch('/message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: chatInput.value, company: currentDomainInfo })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Display server's response in chat window
+                addMessageToChat(data.message, 'response-message');
+            } else {
+                // Handle error case
+                addMessageToChat('Error processing message', 'response-message');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            addMessageToChat('Error sending message', 'response-message');
+        });
+
+        chatInput.value = ''; // Clear chat input field
+    }
+});
+
+</script>
+
+</body>
+</html>
