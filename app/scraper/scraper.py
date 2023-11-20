@@ -1,7 +1,7 @@
 import requests
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
-from typing import Set, Optional
+from typing import Set, Optional, List, Any
 from os import mkdir
 import json
 from pathlib import Path
@@ -40,39 +40,19 @@ class Scraper:
         """Extracts the second-level domain from the URL."""
         return urlparse(url).netloc.split('.')[0]
 
-    def get_all_page_links(self, url) -> Set[str]:
+    def get_all_page_links(self, url) -> list[Any]:
         """Returns all unique internal links found on a single page `url`."""
-        if self.visited is None:
-            self.visited = set()
-
-        normalized_url = url.lower()  # Should consider removing .lower() or ensure URL case normalization is handled correctly
-        if normalized_url in self.visited:
-            return self.visited
-        else:
-            self.visited.add(normalized_url)
-
-        if 'blog' in urlparse(normalized_url).path:
-            print('Skipping blog:', normalized_url)
-            return self.visited
-
         try:
             response = requests.get(url, timeout=5)
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
                 links = [a.get('href') for a in soup.find_all('a', href=True)]
-                for link in links:
-                    joined_url = urljoin(url, link)
-                    normalized_joined_url = joined_url.lower()  # Again, consider case sensitivity
-                    if 'blog' not in urlparse(normalized_joined_url).path:
-                        if urlparse(normalized_joined_url).netloc == urlparse(url).netloc:  # This check is added
-                            if self.is_valid_url(normalized_joined_url):  # Make sure this method is defined and correct
-                                if normalized_joined_url not in self.visited:
-                                    self.visited.update(self.get_all_page_links(
-                                        normalized_joined_url))  # Recursively update the visited set
+                filtered_links = [link for link in links if url in link]
+                unique_filtered_links = list(set(filtered_links))
+                return unique_filtered_links
         except requests.RequestException as e:
             print(f'Error accessing {url}: {e}')
-        finally:
-            return self.visited
+
 
     def create_storage_dir(self) -> Path:
         """Creates a directory within scraped_data/ named after the website's second-level domain."""
@@ -173,7 +153,13 @@ class Scraper:
                 document.add_page_break()
                 title = url.replace(self.url, '').strip('/')
                 document.add_heading(title, level=1)
-                document.add_paragraph(content)
+
+                cleaned_content = clean_text(content)
+                try:
+                    document.add_paragraph(cleaned_content)
+                except:
+                    print(title)
+                    continue
 
                 # Text File
                 all_content.append(title + '\n' + content)  # Add internal URL content to the list
@@ -186,11 +172,18 @@ class Scraper:
         with open(text_file_path, 'w', encoding='utf-8') as text_file:
             text_file.write('\n\n'.join(all_content))
 
+        print('done')
+
 
 # Example
 # scraper = Scraper()
 # scraper.url = "https://www.scrapethissite.com/"
 # scraper.scrape()
+def clean_text(text):
+    # Replace or remove non-XML compatible characters
+    cleaned_text = text.replace('\x00', '').replace('\r', '').replace('\n', ' ')
+    # Further cleaning as needed
+    return cleaned_text
 
 def get_internal_links(url, visited=None):
     if visited is None:

@@ -3,10 +3,10 @@ from flask_cors import CORS
 from app.scraper.scraper import Scraper
 from app.core.chatapi import generate_response, download_blob
 
-app = Flask(__name__)
 
 
-@app.route("/message", methods=["POST"])
+
+
 def receive_message():
     print(request)
     message_data = request.json
@@ -29,11 +29,10 @@ def receive_message():
     )
 
 
-@app.route("/url", methods=["POST"])
-def receive_url():
+
+def receive_url(url):
     print("start_scraping")
-    message_data = request.json
-    url = message_data["url"]
+
 
     scraper = Scraper()
     scraper.scrape(url)
@@ -42,8 +41,7 @@ def receive_url():
     return jsonify({"status": "success", "message": f"Message received: {url}"}), 200
 
 
-# Configure CORS to allow both production and local development domains
-CORS(app, resources={r"/*": {"origins": ["https://api.mijndata.ai", "http://127.0.0.1:8087"]}})
 
 
 
+receive_url('https://dehoogewaerder.nl/')
